@@ -1,0 +1,12 @@
+for first time:
+	git clone https://github.com/2227670/tpt
+
+for second time
+	git status
+	git add .
+	git commit -m " "
+	git push origin master
+
+	git branch
+	git branch new_branch
+	git checkout branch name
