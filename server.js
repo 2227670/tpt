@@ -4,11 +4,24 @@ var url = require("url");
 function start(route, handle) {
   function onRequest(request, response) {
     
+    var postData = "";
+    request.setEncoding("utf8");
+    //параметры ппередачи
+
     var pathname = url.parse(request.url).pathname;
     console.log("Request for " + pathname + " received.");
 
-    route(handle, pathname, response);
-    //весь ответ передаем в обработчик
+    //обработка по кускам
+    request.addListener("data", function(postDataChunk) {
+      postData += postDataChunk;
+      console.log("Received POST data chunk '"+
+      postDataChunk + "'.");
+    });
+
+    request.addListener("end", function() {
+      route(handle, pathname, response, postData);
+    });
+    //все что есть в обработчик
   }
 
   http.createServer(onRequest).listen(8888);
