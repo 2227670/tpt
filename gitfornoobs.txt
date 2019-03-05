@@ -1,11 +1,16 @@
 for first time:
 	git clone https://github.com/2227670/tpt
 
-for second time
+update central repo
 	git status
 	git add .
 	git commit -m " "
 	git push origin master
+
+update local Repo
+	git remote add upstream link
+	git pull upstream master
+
 
 	git branch
 	git branch new_branch
