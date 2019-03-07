@@ -1,8 +1,8 @@
 var fs = require('fs');
 var querystring = require('querystring');
+var formidable = require('formidable');
 
-
-function start(response, postData) {
+function start(response) {
   console.log("Request handler 'start' was called.");
 
   var page = fs.readFileSync('./pages/index.html');
@@ -11,14 +11,31 @@ function start(response, postData) {
   response.end();
 }
 
-function upload(response, postData) {
+function upload(response, request) {
   console.log("Request handler 'upload' was called.");
-  response.writeHead(200, {"Content-Type": "text/plain"});
-  response.write("You've sent the text: " +  querystring.parse(postData).text);
-  response.end();
+  
+  var form = new formidable.IncomingForm();
+  console.log("about to parse");
+    
+  form.parse(request, function(error, fields, files){
+      console.log("parsing done");
+      
+      //rename func
+      fs.rename(files.upload.path, "./files/test.jpg", function(err){
+        if(err){
+          fs.unlink("./files/test.jpg");
+          fs.rename(files.upload.path, "./files/test.jpg")     
+        }
+    });
+    var test = "<img src='/show' />";
+    response.writeHead(200, {"Content-Type": "text/html"});
+	  response.write("received image:<br/>");
+	  response.write("<img src='/" + "show'/>");
+	  response.end();
+    });
 }
 
-function show(response, postData) {
+function show(response) {
   console.log("Request handler 'show' was called.");
   fs.readFile("./files/test.jpg", "binary", function(error, file) {
     if(error) {
@@ -32,6 +49,10 @@ function show(response, postData) {
     }
   });
 }
+
+  
+
+
 exports.start = start;
 exports.upload = upload;
 exports.show = show;

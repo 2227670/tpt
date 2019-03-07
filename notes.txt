@@ -27,4 +27,23 @@ response.writeHead(200, {"Content-Type": "text/plain"});
   response.write("You've sent the text: " +  querystring.parse(postData).text);
   response.end();
 
-  ///////////////
+///////////////
+
+  3. Upload postData
+
+///////////////
+
+var postData = "";
+    request.setEncoding("utf8");
+
+ request.addListener("data", function(postDataChunk) {
+      postData += postDataChunk;
+      console.log("Received POST data chunk '"+
+      postDataChunk + "'.");
+    });
+
+    request.addListener("end", function() {
+      route(handle, pathname, response, postData);
+    });
+
+///////////////
