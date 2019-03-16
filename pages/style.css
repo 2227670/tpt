@@ -1,0 +1,33 @@
+
+    body {
+        background-color: lightcyan;  
+    }
+    #main{
+        width: 1000px;
+        height: 500px;
+        border: 1px solid #333;
+        padding: 8px 12px;
+        
+    }
+    .RowDiv {
+        width: 500px;
+        height: 70px;
+        border: 1px solid #333;
+        
+    }
+    .btnDownload {
+        background-color:lightgreen;
+        position: relative;
+        left: 20%;
+        top: 30%;
+        
+
+    }
+
+    .btnShow{
+        background-color: lightcoral;
+        position: relative;
+        left: 40%;
+        top: 30%;
+    }
+

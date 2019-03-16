@@ -1,6 +1,7 @@
-var fs = require('fs');
-var querystring = require('querystring');
-var formidable = require('formidable');
+const fs = require('fs');
+const querystring = require('querystring');
+const formidable = require('formidable');
+const exec = require('child_process').exec;
 
 function start(response) {
   console.log("Request handler 'start' was called.");
@@ -37,7 +38,7 @@ function upload(response, request) {
 
 function show(response) {
   console.log("Request handler 'show' was called.");
-  fs.readFile("./files/test.jpg", "binary", function(error, file) {
+  fs.readFile("./files/testImage.jpg", "binary", function(error, file) {
     if(error) {
       response.writeHead(500, {"Content-Type": "text/plain"});
       response.write(error + "\n");
@@ -50,12 +51,40 @@ function show(response) {
   });
 }
 
-  
+function showFiles(response){
+  exec("dir /b files", function(error, stdout, stderr){
+    if(error) {
+      response.writeHead(500, {"Content-Type": "text/plain"});
+      response.write(error + "\n");
+      response.end();
+  }
+    else  {
+      var fileList = stdout.split("\n");
+      fs.readFile('./pages/showFiles.html', function(error, page){
+        if(error){
+          console.log("Error when file reading");
+          response.writeHead(500, {"Content-Type": "text/plain"});
+          response.write(error + "\n");
+          response.end();
+        }
+        else {
+          response.writeHead(200, {"Content-Type": "text/html"});
+          response.write(page);
+          response.end();
+          }
+      });
+              
+  }
+});
+}
 
+var test = "Heloo";
 
+exports.showFiles = showFiles;
 exports.start = start;
 exports.upload = upload;
 exports.show = show;
+
 
   //функции с обработчика
   

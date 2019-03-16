@@ -1,17 +1,17 @@
-function route(handle, pathname, response, postData) {
-    console.log("About to route a request for " + pathname);
-    
-    if (typeof handle[pathname] === 'function') {
-      handle[pathname](response, postData);
-    } else {
-      console.log("No request handler found for " + pathname);
-      response.writeHead(404,{"Content-Type": "text/plain"});
-      response.write("404 Not Found");
-      response.end();
-    }
+const requestAssets = require("./requestAssets");
+
+function route(handle, pathname, response, request) {
+  console.log("Function route works with " + pathname);
+
+  if (typeof handle[pathname] === 'function') {
+    handle[pathname](response, request);
+  } else {
+    console.log("Send to assets handler: " + pathname);
+    requestAssets.join(pathname, response);
   }
-  
-  exports.route = route;
+}
+
+exports.route = route;
 
 
 
