@@ -9,6 +9,12 @@
         padding: 8px 12px;
         
     }
+    #additional{
+        width: 1000px;
+        height: 500px;
+        border: 1px solid #333;
+        padding: 8px 12px;
+    }
     .RowDiv {
         width: 500px;
         height: 70px;

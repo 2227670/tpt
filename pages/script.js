@@ -1,11 +1,16 @@
-
 window.onload = function () {
+    //for updating data about files
+     
+    var fileList = (function (query) {
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.open("GET", query, false); // false for synchronous request
+        xmlHttp.send(null);
+        return xmlHttp.responseText;
+    }('show')).split("\n");
 
-    
-    var testArray = ["testImage", "testFolder", "testTextDocument", "testDocument"];
 
-    for (var i = 0; i < testArray.length; i++) {
-        addButtons(testArray[i]);
+    for (var i = 0; i < fileList.length - 1; i++) {
+        addButtons(fileList[i]);
     }
 
     function addButtons(fileName) {
@@ -18,14 +23,29 @@ window.onload = function () {
         btnDownload.className = "btnDownload";
         btnDownload.id = fileName;
         btnDownload.onclick = function () {
-            alert("Download file: " + btnDownload.id);
-        }
+            alert("download file");
+            //prosto na ska4ivanie
+        };
         var btnShow = document.createElement("button");
         btnShow.innerText = "Show";
         btnShow.className = "btnShow";
         btnShow.id = fileName;
         btnShow.onclick = function () {
-            alert("Show file: " + btnShow.id);
+            //window.location.href = 'show/' + btnDownload.id;
+            //ta samaja funkcija na polui4enie, a tam uzhe vqvod v div
+            
+            var testImage = (function (query) {
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.open("GET", query, false); // false for synchronous request
+                xmlHttp.send(null);
+                return xmlHttp.responseText;
+            }('show/' + btnShow.id));
+            //document.getElementById("additional").src = testImage;
+
+            var img = document.createElement("img");
+            img.src = testImage;
+            var src = document.getElementById("additional");
+            src.appendChild(img);
         }
 
 
