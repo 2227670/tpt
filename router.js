@@ -1,25 +1,56 @@
 const url = require("url");
 const requestAssets = require("./requestAssets");
+const authorization = require("./authorization");
 
 function route(handle, path, response, request) {
-  
+
   var pathname = url.parse(path).pathname;
   var method = pathname.split('/');
-  //делим что бы ид странице передавать
+  var handler = method[1];
 
-  console.log("Function route works with " + pathname);
-  console.log(method[1]);
+  var query = (function (method) {
+    var query = '';
+    for (var i = 2; i < method.length; i++) {
+      //slozhityj vse v ku4u :)
+      query += '/' + method[i];
+    }
+    return query;
+  }(method));
+
+
+  console.log("Function ROUTE works with " + path);
+  console.log("Handle name: " + method[1]);
+  console.log('Query: ' + query);
+
 
   if (path == '' || path == '/') {
-    requestAssets.loadFile('/index.html', response);
-  } 
-  else if(typeof handle[method[1]] === 'function'){
-    handle[method[1]](response, request, method[2]);
-    //проверяем на наличие функции, если есть то запуск
+    if (authorization.login()) {
+      requestAssets.loadFile('/index.html', response);
+    }
+    else {
+      requestAssets.loadFile('/login.html', response);
+    }
+
+  }
+  else if (typeof handle[method[1]] === 'function') {
+    if (authorization.login()) {
+      console.log('Send to ' + method[1] + ' handler: ' + query);
+      handle[method[1]](response, request, query);
+    }
+    else {
+      requestAssets.loadFile('/login.html', response);
+    }
   }
   else {
-    console.log("Send to assets handler: " + pathname);
-    requestAssets.loadFile(pathname, response);
+    if (authorization.login()) {
+      console.log("Send to ASSEST handler: " + pathname);
+      requestAssets.loadFile(pathname, response);
+    }
+    else {
+      requestAssets.loadFile('/login.html', response);
+    }
+
+
   }
 }
 

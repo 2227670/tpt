@@ -3,9 +3,260 @@ const querystring = require('querystring');
 const formidable = require('formidable');
 const exec = require('child_process').exec;
 const mime = require('mime-types');
+const path = require("path");
+const rimraf = require("rimraf");
 
-const ROOT = __dirname + "/files";
+const requestAssets = require("./requestAssets");
+const authorization = require("./authorization");
+
+const ROOT = __dirname + "/UsersData";
 var JSONfile = require('./pages/info.json');
+
+
+
+function upload(response, request) {
+
+  console.log("try to upload");
+  var form = new formidable.IncomingForm();
+  form.parse(request, function (error, fields, files) {
+    if (error) {
+      console.log(error);
+    }
+    else {
+      if (files.upload.size == 0) {
+        //nas naebali
+        requestAssets.loadFile('/upload.html', response);
+        //send some page with info about size = 0
+      }
+      else {
+        ///////check that file with same name doesn't exist
+        if (fs.existsSync('./files/' + files.upload.name)) {
+          files.upload.name = (function (fileName) {
+            var d = new Date();
+            //var time = d.getHours() +"-"+ d.getMinutes() +"-"+ d.getSeconds();
+            return d.getHours() + "-" + d.getMinutes() + "-" + d.getSeconds() + "-" + fileName;
+          }(files.upload.name));
+        }
+
+        var oldpath = files.upload.path;
+        var newpath = './files/' + files.upload.name;
+
+        fs.rename(oldpath, newpath, function (err) {
+          if (err) {
+            console.log(err);
+          }
+          else {
+            console.log("done");
+            requestAssets.loadFile('/upload.html', response);
+          }
+        });
+      }
+    }
+  });
+}
+
+function download(response, request, id) {
+
+  console.log("Handler DOWNLOAD works with: " + id);
+  if (id == undefined) {
+    //nu ja hz kak vse ku4ei otdavatj
+  }
+  else {
+    if(id.includes("%")){ 
+    id = (function (fileName) {
+      return fileName.replace(/%20/g, " ");
+    }(id));}
+
+    var dataPath = ROOT + id;
+
+    if (fs.lstatSync(dataPath).isDirectory()) {
+      response.writeHead(200, { "Content-Type": "text/html" });
+      response.write("tq tam ebu dal?");
+      response.end();
+    }
+    ////////////nu skkoree perehod v nee chem skachivanie
+    else {
+      console.log("Try to download file:" + dataPath);
+      if (fs.existsSync(dataPath)) {
+        fs.readFile(dataPath, function (error, data) {
+          if (error) {
+            console.log("Something went wrong");
+            console.log(error)
+            response.writeHead(200, { "Content-Type": "text/html" });
+            response.write(fs.readFileSync('./pages/404.html'));
+            response.end();
+          }
+          else {//here dodelatj nado
+            console.log("Try to downloading: " + id);
+            var file = './files/' + id;
+            var filename = path.basename(file);
+            var mimetype = mime.lookup(file);
+            console.log("type of file: " + mimetype);
+
+            response.setHeader('Content-disposition', 'attachment; filename=' + filename);
+            response.setHeader('Content-type', 'application/octet-stream');
+            var filestream = fs.createReadStream(file);
+            filestream.pipe(response);
+
+            console.log("Picture downloaded: " + id);
+          }
+        });
+      }
+      else {
+        console.log("We don't have this file: " + id);
+      }
+
+
+    }
+  }
+}
+
+function show(response, request, id) {
+
+  console.log("response show received with id: " + id);
+  if (id == undefined) {
+    //send info about default directory
+    //useless mby?
+    exec("dir /b files", function (error, stdout, stderr) {
+      if (error) {
+        response.writeHead(500, { "Content-Type": "text/plain" });
+        response.write(error + "\n");
+        response.end();
+      }
+      else {
+        response.writeHead(200, { "Content-Type": "text/plain" });
+        response.write(stdout);
+        response.end();
+      }
+    });
+  }
+  else {
+    //send data about 'id' directory
+    id = (function (fileName) {
+      return fileName.replace(/%20/g, " ");
+    }(id));
+    //var test ='./UsersData/' +  id;
+    if (fs.lstatSync('./UsersData/' + id).isDirectory()) {
+      /*
+      response.writeHead(200, { "Content-Type": "text/html" });
+      response.write("tq tam ebu dal?");
+      response.end();
+      */
+      testFolder = './UsersData/' + id;
+      fs.readdir('./UsersData/' + id, function (err, files) {
+        if (err) {
+          console.log(err);
+        }
+        else {
+          response.writeHead(200, { "Content-Type": "text/plain" });
+          response.write(files.toString());
+          response.end();
+        }
+
+
+      });
+
+    }
+    ////////////perehod tudq dolzhen bqtj
+    else {
+
+      console.log("file: " + './files/' + id);
+      //send picture to here :)
+      if (fs.existsSync('./files/' + id)) {
+        fs.readFile('./files/' + id, function (error, data) {
+          if (error) {
+            console.log("Something went wrong");
+            console.log(error)
+            response.writeHead(500, { "Content-Type": "text/html" });
+            response.write(fs.readFileSync('./pages/404.html'));
+            response.end();
+          }
+          else {
+            console.log("Trying to show " + id);
+            response.writeHead(200, { 'Content-Type': mime.lookup(data) });
+            response.write(data);
+            response.end();
+            console.log("Picture showed: " + id);
+          }
+        });
+      }
+      else {
+        console.log("We don't have this file: " + id);
+      }
+
+    }
+  }
+}
+
+function remove(response, request, id) {
+
+  if (id == undefined) {
+    //uto4naet i removaet vse
+  }
+  else {
+    if(id.includes("%")){ 
+    id = (function (fileName) {
+      return fileName.replace(/%20/g, " ");
+    }(id));}
+    console.log('Handler REMOVE works with: ' + id);
+
+    var dataPath = ROOT + id;
+
+    if (fs.lstatSync(dataPath).isDirectory()) {
+      rimraf.sync(dataPath);
+      console.log("Try to delete dir: " + dataPath);
+      response.writeHead(200, { "Content-Type": "text/plain" });
+      response.write("true");
+      response.end();
+      console.log("Directory deleted: " + dataPath);
+    }
+    else {
+      console.log("Try to delete file: " + dataPath);
+      if (fs.existsSync(dataPath)) {
+        fs.unlinkSync(dataPath);
+        response.writeHead(200, { "Content-Type": "text/plain" });
+        response.write("true");
+        response.end();
+        console.log("File deleted: " + dataPath);
+      }
+      else {
+        console.log("We don't have this file: " + dataPath);
+      }
+    }
+  }
+}
+
+
+function getUserData(response, request, id) {
+  console.log("Send data about user.");
+  response.writeHead(200, { "Content-Type": "text/plain" });
+  response.write(authorization.getDir(authorization.getUser()));
+  response.end();
+}
+
+function getDataType(response, request, id) {
+    
+  if(id.includes("%")){ 
+     id = (function (fileName) {
+    return fileName.replace(/%20/g, " ");
+  }(id));}
+  console.log('Handler getDataType works with: ' + id);
+ 
+  var dataPath = ROOT + id;
+    
+  if (fs.lstatSync(dataPath).isDirectory()) {
+    console.log("Send data type for: " + dataPath);
+    response.writeHead(200, { "Content-Type": "text/plain" });
+    response.write('dir');
+    response.end();
+  }
+  else{
+    console.log("Send data type for: " + dataPath);
+    response.writeHead(200, { "Content-Type": "text/plain" });
+    response.write(mime.lookup(dataPath));
+    response.end();
+  }
+}
 
 
 function start(response, request, id) {
@@ -17,97 +268,17 @@ function start(response, request, id) {
   response.end();
 }
 
-function upload(response, request) {
-  console.log("Request handler 'upload' was called.");
-
-  var form = new formidable.IncomingForm();
-  console.log("about to parse");
-
-  form.parse(request, function (error, fields, files) {
-    console.log("parsing done");
-
-    //rename func
-    fs.rename(files.upload.path, "./files/test.jpg", function (err) {
-      if (err) {
-        fs.unlink("./files/test.jpg");
-        fs.rename(files.upload.path, "./files/test.jpg")
-      }
-    });
-    var test = "<img src='/show' />";
-    response.writeHead(200, { "Content-Type": "text/html" });
-    response.write("received image:<br/>");
-    response.write("<img src='/" + "show'/>");
-    response.end();
-  });
-}
-
-function show(response, request, id) {
-  console.log("response show received with id: " + id);
-  if (id == undefined) {
-    exec("dir /b files", function (error, stdout, stderr) {
-      if (error) {
-        response.writeHead(500, { "Content-Type": "text/plain" });
-        response.write(error + "\n");
-        response.end();
-      }
-      else {
-        response.writeHead(500, { "Content-Type": "text/plain" });
-        response.write(stdout);
-        response.end();
-      }
-    });
-  }
-  else {
-    console.log("file: " + './files/' + id);
-    //send picture to here :)
-    if (fs.existsSync('./files/' + id)) {
-      fs.readFile('./files/' + id, function (error, data) {
-        if (error) {
-          console.log("Something went wrong");
-          console.log(error)
-          response.writeHead(200, { "Content-Type": "text/html" });
-          response.write(fs.readFileSync('./pages/404.html'));
-          response.end();
-        }
-        else {
-          console.log("Trying to show " + id);
-          response.writeHead(200, { 'Content-Type': mime.lookup(data) });
-          response.write(data);
-          response.end();
-          console.log("Picture showed: " + id);
-        }
-      });
-    }
-    else{
-      console.log("We don't have this file: " + id);
-    }
-
-  }
-}
-
-function showFiles(response) {
-
-}
-
-function TestDownload(response) {
-  var dir = __dirname + "/files";
-  var file = 'testImage.jpg';
-  var mimetype = mime.lookup(file);
-  console.log("all good, file type: " + mimetype);
-  //fs.readFile('./files' + file, function(err, data){
-  response.setHeader('Content-disposition', 'attachment; filename=' + file);
-  response.setHeader('Content-type', mimetype);
-  var filestream = fs.createReadStream('./files/' + file);
-  filestream.pipe(response);
-  //});
-}
 
 
-
-exports.showFiles = showFiles;
 exports.start = start;
+
 exports.upload = upload;
 exports.show = show;
+exports.download = download;
+exports.remove = remove;
+
+exports.getUserData = getUserData;
+exports.getDataType = getDataType;
 
 
   //функции с обработчика

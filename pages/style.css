@@ -19,19 +19,29 @@
         width: 500px;
         height: 70px;
         border: 1px solid #333;
-        
+    }
+    .lblDataType{
+        background-color: lightgoldenrodyellow;
+        position: relative;
+        left: 40%;
+        top: 30%; 
     }
     .btnDownload {
         background-color:lightgreen;
         position: relative;
-        left: 20%;
+        left: 40%;
         top: 30%;
         
 
     }
-
     .btnShow{
         background-color: lightcoral;
+        position: relative;
+        left: 40%;
+        top: 30%;
+    }
+    .btnDelete{
+        background-color: lightseagreen;
         position: relative;
         left: 40%;
         top: 30%;

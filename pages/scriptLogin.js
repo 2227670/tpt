@@ -1,0 +1,1 @@
+//zapros kototqrqi otpravlaet dannqe na server i td.

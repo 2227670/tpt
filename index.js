@@ -5,14 +5,17 @@ const requestHandlers = require("./requestHandlers");
 var handle = {}
 //handle["/"] = requestHandlers.start;
 handle["/start"] = requestHandlers.start;
-handle["/upload"] = requestHandlers.upload;
 
-handle["/showFiles"] = requestHandlers.showFiles;
 
 
 //we can used it
 handle["show"] = requestHandlers.show;
-handle["download"] = requestHandlers.TestDownload;
+handle["download"] = requestHandlers.download;
+handle["upload"] = requestHandlers.upload;
+handle["remove"] = requestHandlers.remove;
+
+handle["getUserData"] = requestHandlers.getUserData;
+handle["getDataType"] = requestHandlers.getDataType;
 
 server.start(router.route, handle);
 
